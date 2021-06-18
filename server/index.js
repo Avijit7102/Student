@@ -6,7 +6,7 @@ require('dotenv').config();
 const port = process.env.port || 7700;
 const ObjectId = require('mongodb').ObjectID;
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://student:student123@cluster0.wy6ti.mongodb.net/student?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wy6ti.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 app.use(cors());
 app.use(bodyParser.json());
 app.get('/', (req, res) => {
@@ -15,13 +15,29 @@ app.get('/', (req, res) => {
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
-  const collection = client.db("student").collection("studentList");
+  const studentCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION}`);
   // perform actions on the collection object
   console.log('database connected');
   //client.close();
 
   app.get('/student',(req,res) => {
       res.send("its working!");
+  })
+
+  app.post('/addStudent', (req,res) => {
+    const newStudent = req.body;
+    console.log('adding new event: ', newStudent);
+    studentCollection.insertOne(newStudent)
+    .then(result => {
+      console.log('inserted count', result.insertedCount)
+      res.send(result.insertedCount > 0)
+    })
+  })
+  app.get('/students', (req,res) => {
+    studentCollection.find()
+    .toArray((err, student) => {
+      res.send(student)
+    })
   })
 });
 app.listen(process.env.PORT || port )
