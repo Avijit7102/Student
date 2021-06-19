@@ -31,13 +31,21 @@ client.connect(err => {
     .then(result => {
       console.log('inserted count', result.insertedCount)
       res.send(result.insertedCount > 0)
+      res.redirect('/')
     })
   })
+
   app.get('/students', (req,res) => {
     studentCollection.find()
     .toArray((err, student) => {
       res.send(student)
     })
   })
+
+  app.delete('/deleteStudent/:id', (req,res) => {
+    const id = ObjectId(req.params.id);
+    studentCollection.findOneAndDelete({_id: id})
+  })
+
 });
 app.listen(process.env.PORT || port )
